@@ -90,7 +90,7 @@ for t = 1:T
     fprintf('\nQUERY BUDGET ------ %d', t*B)
     % accuracy for each repeat
     acc = [];
-    parfor r = 1:reps
+    for r = 1:reps
         % DIVIDE DATA INTO: 
         % TRAINING DATA (x_train/y_train)
         % TEST DATA (x_train/y_train)
@@ -122,7 +122,7 @@ for t = 1:T
     % verbose
     acc= [];
     fprintf('\nQUERY BUDGET ------ %d', t*B)
-    parfor r = 1:reps 
+    for r = 1:reps 
         % DIVIDE DATA INTO: 
         % AVAILABLE DATA (X)
         % HIDDEN LABELS (Y)
