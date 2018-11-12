@@ -85,8 +85,9 @@ end
 %--------------------------------------------------------------------------
 % PREDICT
 %--------------------------------------------------------------------------
-% evaluate the liklihood for each of test data
-p_xyD = zeros(length(xtest), k);
+% evaluate the (log) liklihood for each of test data
+% p_xyD = zeros(length(xtest), k);
+lp_xyD = zeros(length(xtest), k); % (log-liklihood)
 for i = 1:k
     p_kd = [];
     for j = 1:d
@@ -94,23 +95,29 @@ for i = 1:k
             pp_lklhd(xtest(:,j), mu_n(i,j), k_n(i,j), ...
             v_n(i,j), sig2_n(i,j))]; %#ok<AGROW>
     end
-    p_xyD(:, i) = prod(p_kd, 2);
+%     p_xyD(:, i) = prod(p_kd, 2);
+    lp_xyD(:, i) = sum(log(p_kd),2);
 end
 
 % POSTERIOR
-p_yxD = p_xyD.*repmat(p_cD, size(xtest,1), 1);
-[~, y_pred] = max(p_yxD,[],2);
-
-% NORMALISE the posterior, so that the value's sum to 1
-for i = 1:length(xtest)
-    p_yxD(i,:) = p_yxD(i,:)/sum(p_yxD(i,:));
+% p_yxD = zeros(size(xtest,1), k); % posterior
+lp_yxD = zeros(size(xtest,1), k); % log-space
+for i = 1:size(xtest,1)
+    lp_yxD(i,:) = lp_xyD(i,:) + log(p_cD);
+%     p_yxD(i,:) = p_xyD(i,:).*p_cD;
 end
+[~, y_pred] = max(lp_yxD,[],2); % argmax from the log-space
+
+% % NORMALISE the posterior, so that the value's sum to 1
+% for i = 1:length(xtest)
+%     p_yxD(i,:) = p_yxD(i,:)/sum(p_yxD(i,:));
+% end
 end
 
 function p_xyD = pp_lklhd(x, mu_n, k_n, v_n, sig2_n)
 % function for the posterior predictive (pp) liklihood
 
-p_xyD = (gamma((v_n + 1)/2)/gamma(v_n/2))*...
+p_xyD = (v_n/2)^1/2*...%(gamma((v_n + 1)/2)/gamma(v_n/2))*... [ratio of gamma distributions is approximated]
     (k_n/((k_n+1)*pi*v_n*sig2_n))^1/2 *...
     (1 + (k_n*(x - mu_n).^2)/((k_n + 1)*v_n*sig2_n)).^(-(v_n + 1)/2);
 end
